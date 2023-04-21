@@ -1,4 +1,4 @@
-# TBC/BOG External APIS with microservices
+# TBC/BOG External APIS with FASTAPI & microservices
 
 # how to deploy
 
