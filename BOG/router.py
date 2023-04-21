@@ -7,7 +7,7 @@ router = APIRouter()
 bog_api = BogApi()
 
 
-# tokenis generacia
+# Generate Token
 @router.get("/bog_token/")
 async def bog_token() -> str:
     return bog_api.bog_token()
