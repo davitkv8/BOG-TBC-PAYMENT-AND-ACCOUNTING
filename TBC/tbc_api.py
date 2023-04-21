@@ -123,3 +123,26 @@ class TbcApiExternal:
         data = self.parse_xml_to_dict_and_get_incomes(data)
 
         return data
+
+    def transfer_to_own_account(self, **kwargs):
+        url, headers, payload = TBC_OWN_ACC_PAYMENT_PAYLOAD.values()
+
+        formatted_payload = payload.format(
+            ACCOUNTS_DATA.get(kwargs['from_acc']), self.__password,
+            1111, *kwargs.values()
+        )
+
+        response = requests.post(
+            url, data=formatted_payload, headers=headers,
+            cert=(self.cert_path, self.key_path), verify=True
+        )
+
+        xml_data = response.content.decode('utf-8')
+
+        root = ET.fromstring(xml_data)
+        response_content = {
+            "message": "successfully transferred!",
+            "payment_id": root.find(self.headset + "paymentId").text
+        }
+
+        return response_content
