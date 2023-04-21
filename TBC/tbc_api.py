@@ -1,15 +1,20 @@
+import datetime
 import os
+
 import requests
 import xml.etree.ElementTree as ET
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
-from .xml_payloads import *
 from namings import (
     TBC_MOVEMENT_API_FIELD_NAMINGS,
-    ACCOUNTS_DATA,
-    NESTED_XML_TAGS
+    NESTED_XML_TAGS,
+    ACCOUNTS_DATA
 )
+
+from database import SessionLocal
+from .models import Balance, Movement
+from .xml_payloads import *
 
 
 class TbcApiExternal:
@@ -24,6 +29,8 @@ class TbcApiExternal:
         self.headset = ".//{http://www.mygemini.com/schemas/mygemini}"
 
     def get_balance(self):
+
+        db = SessionLocal()
 
         url, headers, payload = TBC_ACCOUNT_STATEMENT_PAYLOAD.values()
         to_date_str = date.today().strftime("%Y-%m-%d")
@@ -48,14 +55,19 @@ class TbcApiExternal:
 
             closing_balance = root.find(self.headset + "closingBalance").text
 
-            data.append({
+            obj = Balance(**{
                 "bank": "TBC",
                 "currency": "GEL",
                 "account_number": address,
                 "balance": closing_balance,
             })
 
-        return data
+            data.append(obj)
+
+        db.add_all(data)
+        db.commit()
+
+        return f"Successfully got and saved balance data to local db."
 
     def parse_xml_to_dict_and_get_incomes(self, xml_data):
 
@@ -96,6 +108,41 @@ class TbcApiExternal:
 
         return converted_dict_data
 
+    def filter_refine_save_movements_data(self, data):
+
+        # Filter current transactions in 7 days range
+        # Just for self insurance (only current day is enough in general purposes)
+        start_date = date.today() - timedelta(days=6)
+        end_date = date.today() + timedelta(days=1)
+
+        db = SessionLocal()
+
+        identifier_ids_in_api_of_our_data = db.query(Movement.external_payment_id).filter(
+            Movement.document_date.between(start_date, end_date)
+        )
+
+        identifier_ids_in_api_of_our_data = set(
+            identifier_id[0] for identifier_id in identifier_ids_in_api_of_our_data
+        )
+
+        bulk_create_filtered_data = []
+
+        for transaction in data:
+            for api_id, value in transaction.items():
+
+                # Filter out data, which already exists in our database
+                if int(api_id) in identifier_ids_in_api_of_our_data:
+                    continue
+
+                value['document_date'] = value['document_date'].split("T")[0]
+
+                bulk_create_filtered_data.append(Movement(**value))
+
+        db.add_all(bulk_create_filtered_data)
+        db.commit()
+
+        return f"CREATED {bulk_create_filtered_data.__len__()} new records"
+
     def get_movements(self, *args):
         url, headers, payload = TBC_MOVEMENTS_PAYLOAD.values()
 
@@ -121,6 +168,7 @@ class TbcApiExternal:
 
         data = response.content.decode('utf-8')
         data = self.parse_xml_to_dict_and_get_incomes(data)
+        data = self.filter_refine_save_movements_data(data)
 
         return data
 
@@ -146,3 +194,30 @@ class TbcApiExternal:
         }
 
         return response_content
+
+
+def get_balance_data_from_db(*args):
+    db = SessionLocal()
+    now = datetime.now()
+    start_time = now - timedelta(hours=1)
+
+    result = db.query(Balance).filter(
+        Balance.synced_at_datetime > start_time
+    ).all()
+
+    return result
+
+
+def get_movements(*args):
+    db = SessionLocal()
+
+    start_datetime, end_datetime = tuple(
+        map(lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M:%S'), args)
+    )
+
+    result = db.query(Movement).filter(
+        Movement.synced_at_datetime > start_datetime,
+        Movement.synced_at_datetime < end_datetime
+    ).all()
+
+    return result
