@@ -2,9 +2,14 @@ import socket
 import uvicorn
 import time
 
+from celery import Celery
 from fastapi import FastAPI
 
 app = FastAPI()
+
+celery_app = Celery(
+    'tasks', broker='redis://redis:6379/0', backend='redis://redis:6379/0'
+)
 
 if __name__ == "__main__":
     while True:
