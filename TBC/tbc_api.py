@@ -56,3 +56,70 @@ class TbcApiExternal:
             })
 
         return data
+
+    def parse_xml_to_dict_and_get_incomes(self, xml_data):
+
+        converted_dict_data = [
+
+        ]
+
+        root = ET.fromstring(xml_data)
+        movements = root.findall(self.headset + "accountMovement")
+
+        for movement in movements:
+            # Check if transaction type is "income".
+            # The income is represented as '20' in TBC API DOC.
+            # We're only looking for that case.
+            if movement.find(self.headset + "transactionType").text == '20':
+                record = {}
+                # get all fields we are interested in
+                for field_name_in_api, field_name_in_db in TBC_MOVEMENT_API_FIELD_NAMINGS.items():
+                    field_name_in_api = field_name_in_api.split(":")[1]
+
+                    value = movement.find(self.headset + field_name_in_api)
+
+                    if field_name_in_api in NESTED_XML_TAGS:
+                        value = value.find(self.headset + field_name_in_api)
+
+                    try:
+                        record.update({
+                            field_name_in_db: value.text
+                        })
+                    except AttributeError:
+                        record.update({
+                            field_name_in_db: None
+                        })
+
+                converted_dict_data.append({
+                    record['external_payment_id']: record
+                })
+
+        return converted_dict_data
+
+    def get_movements(self, *args):
+        url, headers, payload = TBC_MOVEMENTS_PAYLOAD.values()
+
+        start_date = end_date = datetime.today().date().strftime(
+            "%Y-%m-%d"
+        )
+
+        start_date = start_date.replace("18", "12")
+        end_date = end_date.replace("18", "19")
+
+        start_date = (lambda x: x + 'T00:00:00.000')(start_date)
+        end_date = (lambda x: x + 'T23:59:59.999')(end_date)
+
+        formatted_payload = payload.format(
+            self.__default_user, self.__password,
+            111, start_date, end_date
+        )
+
+        response = requests.post(
+            url, data=formatted_payload, headers=headers,
+            cert=(self.cert_path, self.key_path), verify=True
+        )
+
+        data = response.content.decode('utf-8')
+        data = self.parse_xml_to_dict_and_get_incomes(data)
+
+        return data
