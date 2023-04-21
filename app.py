@@ -2,9 +2,21 @@ import socket
 import uvicorn
 import time
 
+from fastapi_sqlalchemy import DBSessionMiddleware
+from BOG import router as bog_router
+from TBC import router as tbc_router
 from fastapi import FastAPI
 
 app = FastAPI()
+app.include_router(bog_router)
+app.include_router(tbc_router)
+
+app.add_middleware(
+    DBSessionMiddleware,
+    db_url=f'postgresql://{os.environ.get("POSTGRES_USER")}:'
+           f'{os.environ.get("POSTGRES_PASSWORD")}@{os.environ.get("POSTGRES_HOST")}/'
+           f'{os.environ.get("POSTGRES_NAME")}'
+)
 
 if __name__ == "__main__":
     while True:
