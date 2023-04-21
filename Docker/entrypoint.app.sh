@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # wait for Postgres to start
-wait-for-it -t 30 -s swissCap__postgresql:5432
+wait-for-it -t 30 -s banking__postgresql:5432
 
 python startup_script.py
 
