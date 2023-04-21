@@ -1,0 +1,87 @@
+version: "3.8"
+
+services:
+
+  db:
+    container_name: banking__postgresql
+    image: postgres
+    env_file:
+      - Docker/env_files/.env.postgres
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app_network
+    ports:
+      - 5432:5432
+
+  app:
+    container_name: banking__app
+    build:
+      context: .
+      dockerfile: Docker/Dockerfile.app
+    env_file:
+      - Docker/env_files/.env.postgres
+      - Docker/env_files/.env.certificates
+      - Docker/env_files/.env.bog
+      - Docker/env_files/.env.tbc
+    volumes:
+      - .:/app
+    ports:
+      - 8000:8000
+    restart: always
+    networks:
+      - app_network
+    depends_on:
+      - db
+      - redis
+    entrypoint: "Docker/entrypoint.app.sh"
+
+  redis:
+    container_name: banking__redis
+    image: redis:6.2-alpine
+    networks:
+     - app_network
+
+  worker:
+    container_name: banking__celery_worker
+    build:
+      context: .
+      dockerfile: Docker/Dockerfile.celery
+    depends_on:
+      - app
+      - redis
+      - db
+    env_file:
+      - Docker/env_files/.env.postgres
+      - Docker/env_files/.env.certificates
+      - Docker/env_files/.env.tbc
+    networks:
+      - app_network
+    entrypoint:
+      "Docker/entrypoint.celery_worker.sh"
+
+  beat:
+    container_name: banking__celery_beat
+    build:
+      context: .
+      dockerfile: Docker/Dockerfile.celery
+    depends_on:
+      - app
+      - redis
+      - db
+      - worker
+    env_file:
+      - Docker/env_files/.env.postgres
+      - Docker/env_files/.env.certificates
+      - Docker/env_files/.env.tbc
+    networks:
+      - app_network
+    entrypoint:
+      "Docker/entrypoint.celery_beat.sh"
+
+
+networks:
+  app_network:
+volumes:
+  postgres_data:
