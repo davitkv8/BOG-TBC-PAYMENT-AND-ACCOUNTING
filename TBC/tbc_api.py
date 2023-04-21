@@ -1,5 +1,15 @@
 import os
 import requests
+import xml.etree.ElementTree as ET
+
+from datetime import date, datetime
+
+from .xml_payloads import *
+from namings import (
+    TBC_MOVEMENT_API_FIELD_NAMINGS,
+    ACCOUNTS_DATA,
+    NESTED_XML_TAGS
+)
 
 
 class TbcApiExternal:
@@ -37,3 +47,12 @@ class TbcApiExternal:
             root = ET.fromstring(xml_response)
 
             closing_balance = root.find(self.headset + "closingBalance").text
+
+            data.append({
+                "bank": "TBC",
+                "currency": "GEL",
+                "account_number": address,
+                "balance": closing_balance,
+            })
+
+        return data
