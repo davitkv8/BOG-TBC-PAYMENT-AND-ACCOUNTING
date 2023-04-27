@@ -47,4 +47,4 @@
 - simple test framework integration (CI/CD OR JUST SIMPLE MANUAL TEST)
 - add layers or encryptors for additional security for our passwords
 - change print statements to responsive logging 
-
+- add GDPASS verification process as API 
