@@ -1,5 +1,27 @@
 # TBC/BOG External APIS with FASTAPI & microservices
 
+# Description
+
+```
+    This project allows user to easly configure prodoction paramerts for Bank of Georgia and TBC Bank payment and accounting services.
+    If you're BOG contractor, for access BOG provides Oauth2 authentication system. (it is not automated yet)
+    
+    If you're TBC contractor, for access TBC provides : 
+    1) DGpass physical device
+    2) certificate files (cert, key, pfx files)
+    3) username and password 
+    
+    you have to configure all of them in ./Docker/env_files/.env.certificates file
+    
+    The idea of project is that, it will automatically sync data (Balances, Money Movements) from your provider's API (BOG or TBC in this case).
+    And also gives you ability to make 2 kinds of payment scenarions very easly -
+    1) Transfer between your own accs
+    2) Transfer between your own acc to anyone else
+    
+    
+    
+```
+
 # how to deploy
 
 ```
@@ -40,7 +62,7 @@
 ```
 
 # todo
-
+- BOG system
 - create startup.py script which corresponds all beginning processes
 - add alembic for migrations at the beginning
 - dockerize all processes, check for volumes/networks work correctly
