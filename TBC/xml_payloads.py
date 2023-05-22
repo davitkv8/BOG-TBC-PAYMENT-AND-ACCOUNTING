@@ -183,3 +183,33 @@ TBC_OWN_ACC_PAYMENT_PAYLOAD = {
         </soapenv:Envelope>
         '''
 }
+
+
+GET_BATCH_PAYMENT_STATUS = {
+
+    "url": "https://secdbi.tbconline.ge/dbi/dbiService",
+
+    "headers": {
+        'Content-Type': 'text/xml; charset=utf-8',
+        'SOAPAction': 'http://www.mygemini.com/schemas/mygemini/GetPaymentOrderStatus'
+    },
+
+    "payload":
+        '''<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:myg="http://www.mygemini.com/schemas/mygemini" xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+               <soapenv:Header>
+                  <wsse:Security>
+                     <wsse:UsernameToken>
+                        <wsse:Username>{}</wsse:Username>
+                        <wsse:Password>{}</wsse:Password>
+                        <wsse:Nonce>{}</wsse:Nonce>
+                     </wsse:UsernameToken>
+                  </wsse:Security>
+               </soapenv:Header>
+               <soapenv:Body>
+                  <myg:GetPaymentOrderStatusRequestIo>
+                     <myg:singlePaymentId>{}</myg:singlePaymentId>
+                  </myg:GetPaymentOrderStatusRequestIo>
+               </soapenv:Body>
+            </soapenv:Envelope>
+        '''
+}

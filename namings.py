@@ -27,6 +27,42 @@ ACCOUNTS_DATA = {
     "GE04TB1234567891234567": "ACCOUNT_OWNER_USERNAME"
 }
 
+STATUS_CODES = {
+    "WC": {
+        "geo": "ავტორიზაციის მოლოდინში",
+        "en": "Waiting for certificate",
+    },
+
+    "CERT": {
+        "geo": "დამუშავების პროცესში",
+        "en": "In Progress",
+    },
+
+    "VERIF": {
+        "geo": "დამუშავების პროცესში",
+        "en": "In Progress",
+    },
+    "WS": {
+        "geo": "დამუშავების პროცესში",
+        "en": "In Progress",
+    },
+
+    "F": {
+        "geo": "დასრულებული",
+        "en": "Finished Successfully",
+    },
+
+    "FL": {
+        "geo": "უარყოფილი",
+        "en": "Failed",
+    },
+
+    "C": {
+        "geo": "გაუქმებული",
+        "en": "Cancelled",
+    },
+}
+
 NESTED_XML_TAGS = [
     "amount",
 ]

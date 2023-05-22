@@ -4,10 +4,10 @@ from .tbc_api import (
     get_balance_data_from_db,
     get_movements, TbcApiExternal
 )
-from .schemas import PaymentData
-
+from .schemas import OwnAccPaymentData, WithinBankPaymentData, BalanceSchema
 
 router = APIRouter()
+external_api_obj = TbcApiExternal()
 
 
 @router.get("/tbc_movements/")
@@ -35,13 +35,18 @@ def tbc_balance() -> list:
     return get_balance_data_from_db()
 
 
-# @router.post("/tbc_transfer_within_bank/")
-# def tbc_transfer_within_bank(data: PaymentData) -> str:
-#     data_dict = data.dict()
-#     # return bog_api.bog_token()
+@router.post("/tbc_transfer_within_bank/")
+def tbc_transfer_within_bank(data: WithinBankPaymentData) -> dict:
+    data_dict = data.dict()
+    return external_api_obj.transfer_within_bank_account(**data_dict)
 
 
 @router.post("/tbc_transfer_to_own_acc/")
-def tbc_transfer_to_own_acc(data: PaymentData) -> dict:
+def tbc_transfer_to_own_acc(data: OwnAccPaymentData) -> dict:
     data_dict = data.dict()
-    return TbcApiExternal.transfer_to_own_account(**data_dict)
+    return external_api_obj.transfer_to_own_account(**data_dict)
+
+
+@router.post("/get_payment_status/")
+def tbc_get_status_code(payments_id_list: list) -> list:
+    return external_api_obj.get_batch_payment_ids(payments_id_list)

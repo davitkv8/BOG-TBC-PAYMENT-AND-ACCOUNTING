@@ -9,7 +9,8 @@ from datetime import date, datetime, timedelta
 from namings import (
     TBC_MOVEMENT_API_FIELD_NAMINGS,
     NESTED_XML_TAGS,
-    ACCOUNTS_DATA
+    ACCOUNTS_DATA,
+    STATUS_CODES
 )
 
 from database import SessionLocal
@@ -172,6 +173,38 @@ class TbcApiExternal:
 
         return data
 
+    def get_batch_payment_ids(self, payment_ids):
+
+        statuses_data = [
+
+        ]
+
+        url, headers, payload = GET_BATCH_PAYMENT_STATUS.values()
+
+        for payment_id in payment_ids:
+
+            formatted_payload = payload.format(
+                self.__default_user, self.__password,
+                111, payment_id
+            )
+
+            response = requests.post(
+                url, data=formatted_payload, headers=headers,
+                cert=(self.cert_path, self.key_path), verify=True
+            )
+
+            xml_response = response.content.decode('ascii')
+            root = ET.fromstring(xml_response)
+            payment_status = root.find(self.headset + "status").text
+
+            payment_status = STATUS_CODES.get(payment_status)
+
+            statuses_data.append({
+                payment_id: payment_status.get("en") if payment_status else None
+            })
+
+        return statuses_data
+
     def transfer_to_own_account(self, **kwargs):
         url, headers, payload = TBC_OWN_ACC_PAYMENT_PAYLOAD.values()
 
@@ -190,6 +223,30 @@ class TbcApiExternal:
         root = ET.fromstring(xml_data)
         response_content = {
             "message": "successfully transferred!",
+            "payment_id": root.find(self.headset + "paymentId").text
+        }
+
+        return response_content
+
+    def transfer_within_bank_account(self, **kwargs):
+
+        url, headers, payload = TBC_WITHIN_BANK_PAYMENT_PAYLOAD.values()
+
+        formatted_payload = payload.format(
+            ACCOUNTS_DATA.get(kwargs['from_acc']), self.__password,
+            1111, *kwargs.values()
+        )
+
+        response = requests.post(
+            url, data=formatted_payload, headers=headers,
+            cert=(self.cert_path, self.key_path), verify=True
+        )
+
+        xml_data = response.content.decode('utf-8')
+
+        root = ET.fromstring(xml_data)
+        response_content = {
+            "message": "Waiting for certificate",
             "payment_id": root.find(self.headset + "paymentId").text
         }
 
