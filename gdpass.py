@@ -14,7 +14,7 @@ cert_path = os.environ.get("CERT_PATH")
 key_path = os.environ.get("KEY_PATH")
 
 PASSWORD = os.environ.get("USER_PASSWORD")
-USERS = ["MURVANIDZE_1", "MURVANIDZE_2"]
+USERS = os.environ.get("TBC_DEFAULT_USER")
 
 url, headers, payload = TBC_ACCOUNT_STATEMENT_PAYLOAD.values()
 to_date_str = date.today().strftime("%Y-%m-%d")
