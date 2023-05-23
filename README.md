@@ -70,3 +70,4 @@
 - add layers or encryptors for additional security for our passwords
 - change print statements to responsive logging 
 - add GDPASS verification process as API 
+- change print statements to logging system
